@@ -1,12 +1,21 @@
-#include "pico/cyw43_arch.h"
-#include "pico/stdlib.h"
-#include "lwip/tcp.h"
-#include <string.h> 
 #include <stdio.h>
+#include <string.h> 
+#include <stdlib.h>
+#include <ctype.h>
+#include "pico/stdlib.h"
+#include "pico/binary_info.h"
+#include "inc/ssd1306.h"
+#include "hardware/i2c.h"
+#include "lwip/tcp.h"
+#include "pico/cyw43_arch.h"
+
 
 #define LED_PIN 12          // Define o pino do LED
 #define WIFI_SSID "vitoria"  // Substitua pelo nome da sua rede Wi-Fi
 #define WIFI_PASS "superembarca" // Substitua pela senha da sua rede Wi-Fi
+
+const uint I2C_SDA = 14;
+const uint I2C_SCL = 15;
 
 // Buffer para respostas HTTP
 #define HTTP_RESPONSE "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" \
@@ -72,8 +81,6 @@ static void start_http_server(void) {
 
 int main() {
     stdio_init_all();  // Inicializa a saída padrão
-    sleep_ms(10000);
-    printf("Iniciando servidor HTTP\n");
 
     // Inicializa o Wi-Fi
     if (cyw43_arch_init()) {
@@ -97,6 +104,10 @@ int main() {
     printf("Wi-Fi conectado!\n");
     printf("Para ligar ou desligar o LED acesse o Endereço IP seguido de /led/on ou /led/off\n");
 
+    
+    sleep_ms(10000);
+    printf("Iniciando servidor HTTP\n");
+
     // Configura o LED como saída
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
@@ -104,11 +115,52 @@ int main() {
     // Inicia o servidor HTTP
     start_http_server();
     
+    // Inicialização do I2C
+    i2c_init(i2c1, ssd1306_i2c_clock * 1000);
+    gpio_set_function(I2C_SDA, GPIO_FUNC_I2C);
+    gpio_set_function(I2C_SCL, GPIO_FUNC_I2C);
+    gpio_pull_up(I2C_SDA);
+    gpio_pull_up(I2C_SCL);
+
+    // Inicialização do OLED
+    ssd1306_init();
+
+    // Preparando a área de renderização do display (ssd1306_width pixels por ssd1306_n_pages páginas)
+    struct render_area frame_area = {
+        start_column : 0,
+        end_column : ssd1306_width - 1,
+        start_page : 0,
+        end_page : ssd1306_n_pages - 1
+    };
+
+    calculate_render_area_buffer_length(&frame_area);
+
+    // zera o display inteiro
+    uint8_t ssd[ssd1306_buffer_length];
+    memset(ssd, 0, ssd1306_buffer_length);
+    render_on_display(ssd, &frame_area);
+
+    // Mensagem de teste
+
+    char *teste[] = {
+        "Ola, mundo!"
+    };
+
+    int y = 0;
+    for (uint i = 0; i < count_of(teste); i++)
+    {
+        ssd1306_draw_string(ssd, 5, y, teste[i]);
+        y += 8;
+    }
+    render_on_display(ssd, &frame_area);
+
     // Loop principal
     while (true) {
         cyw43_arch_poll();  // Necessário para manter o Wi-Fi ativo
         sleep_ms(100);
     }
+
+    
 
     cyw43_arch_deinit();  // Desliga o Wi-Fi (não será chamado, pois o loop é infinito)
     return 0;
