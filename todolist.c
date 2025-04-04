@@ -1,25 +1,25 @@
-#include <stdio.h>
-#include <string.h> 
-#include <stdlib.h>
-#include <ctype.h>
-#include "pico/stdlib.h"
-#include "pico/binary_info.h"
-#include "inc/ssd1306.h"
-#include "hardware/i2c.h"
-#include "lwip/tcp.h"
-#include "pico/cyw43_arch.h"
+#include <ctype.h> // Funções de manipulação de caracteres
+#include <stdio.h>  // Padrão C
+#include <stdlib.h> // Funções para alocação de memória, conversões de strings e outras utilidades
+#include <string.h> // Funções de manipulação de strings
+#include "pico/binary_info.h" // 
+#include "pico/cyw43_arch.h" // Módulo Wi-Fi e Bluetooth
+#include "pico/stdlib.h" // Padrão Pico Pi
+#include "hardware/i2c.h" // Comunicação i2c
+#include "inc/ssd1306.h" // Controle de display OLED
+#include "lwip/tcp.h" // Lightweight IP (lwIP) - Cria conexões 
 
 
 #define LED_PIN 12          // Define o pino do LED
-#define WIFI_SSID "vitoria"  // Substitua pelo nome da sua rede Wi-Fi
-#define WIFI_PASS "superembarca" // Substitua pela senha da sua rede Wi-Fi
+#define WIFI_SSID "aulaEmbarca"  // Substitua pelo nome da sua rede Wi-Fi
+#define WIFI_PASS "senhaEmbarca123" // Substitua pela senha da sua rede Wi-Fi
 
 const uint I2C_SDA = 14;
 const uint I2C_SCL = 15;
 
 // Buffer para respostas HTTP
 #define HTTP_RESPONSE "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" \
-                      "<!DOCTYPE html><html><body>" \
+                      "<!DOCTYPE html><html><head><meta http-equiv='refresh' content='5'></head><body>" \
                       "<h1>Controle do LED</h1>" \
                       "<p><a href=\"/led/on\">Ligar LED</a></p>" \
                       "<p><a href=\"/led/off\">Desligar LED</a></p>" \
